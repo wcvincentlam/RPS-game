@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock Paper Scissors</title>
+</head>
+<body>
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+            display: block;
+            color:white;
+            background-color: black;
+            background-image: url(assets/background.jpg);
+            font-size: 25px;
+            min-width: 500px;
+        }
+        h1 {
+            font-size: 2rem;
+            display: block;
+            text-align: center;
+            margin: 2rem;
+        }
+        h2 {
+            font-size: 25px;
+        }
+        .game-area {
+            width: 500px;
+            margin: 0 auto;
+            padding: 20px 0 20px 0;
+            text-align: center;
+        }
+        img {
+            width:5rem;
+            height:5rem; 
+            margin:10px;   
+            border: solid white;
+            border-radius: 25%;
+        }
+        .player-container {
+            min-width: 250px;
+            text-align: left;
+        }
+        .player-buttons {
+            display: flex;
+            padding-bottom: 10px;
+        }
+        .player-button:hover {
+            border-color: rgb(4, 235, 4);
+            transform: scale(1.1);
+            box-shadow: 0 0 1rem rgb(4, 235, 4);
+            cursor: pointer;
+        }
+        .player-score {
+            color: rgb(4, 235, 4);
+            text-shadow: 2px 2px 10px rgb(4, 235, 4);
+        }
+        .player-score, .computer-score {
+            display: inline-block;
+            padding-left: 0.5em;
+            font-size: 30px;
+        }
+        .computer-score {
+            color: rgb(255, 0, 0);
+            text-shadow: 2px 2px 10px rgba(255, 0, 0);
+        }
+        .computer-container {
+            text-align: right;
+        }
+        .computer-button {
+            opacity: 0.5;
+        }
+        .computer-button:hover {
+            cursor: not-allowed;
+        }
+        .glow {
+            background-color: rgb(5, 211, 5); ;
+            border-color: rgb(5, 211, 5);
+            transform: scale(1.05);
+            box-shadow: 0 0 1rem rgb(5, 211, 5);
+        }
+        .red-glow {
+            background-color:rgba(255, 0, 0, 0.87);
+            border-color: rgba(255, 0, 0, 0.87);
+            transform:scale(1.05);
+            box-shadow: 0 0 1rem rgba(255, 0, 0, 0.87);
+        }
+        .collapse {
+            transform: translateY(2rem);
+            transition: 0.1s ease;
+            opacity: 0 !important;
+        }
+        .freeze {
+            pointer-events: none;
+            opacity: 0.3;
+        }
+        #list {
+            list-style: none;
+            margin: 0.5em;
+            padding:0.5em;
+            font-size: 20px;
+            opacity: 0.5;
+            border-radius: 5px;
+        }
+        #list:first-child{
+            opacity: 1;
+            font-size: 25px;
+        }
+        #button {
+            margin: 0;
+            padding: 15px;
+            width: 200px;
+            height: 150px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            font-size: 30px;
+            background-color: rgba(0, 0, 0, 0.452);
+            color:white;
+            border-radius: 25px;
+            transform: translate(-50%,-50%);
+        }
+        #button:hover {
+            transform: translate(-50%,-50%) scale(1.05);
+        }
+
+        #results {
+            background-color: black;
+            border-radius: 25px;
+            opacity: 0.8;
+        }
+        .btn-glow {
+            box-shadow: 0 0 2rem rgb(5, 211, 5);
+        }
+        .btn-glow-red {
+            box-shadow: 0 0 2rem rgba(255, 0, 0, 0.87);
+        }
+    </style>
+    <h1>Beat The Computer!</h1>
+    <div class = "game-area">
+        <div class = "player-container">
+            <h2>Your Score 
+                <div class = "player-score">0</div> 
+            </h2>
+            <div class = "player-buttons"> 
+                <img src="assets/rock.jpg" class = "player-button" value = "rock"></button>
+                <img src="assets/paper.jpg" class = "player-button" value = "paper"></button>
+                <img src="assets/scissors.jpg" class = "player-button" value = "scissors"></button>
+            </div>
+        </div>
+        <div class= "computer-container">
+            <div class = "computer-buttons"> 
+                <img src="assets/rock.jpg" class = "computer-button" id = "rock"></button>
+                <img src="assets/paper.jpg" class = "computer-button" id = "paper"></button>
+                <img src="assets/scissors.jpg" class = "computer-button" id = "scissors"></button>
+            </div>    
+            <h2>Computer Score 
+                <div class = "computer-score">0</div> 
+            </h2>
+        </div>
+        <div>First to 5 Wins!</div>
+        <div id = "results"></div>
+    </div>
+
+    <script>
+        let playerSelection = "";
+        let computerSelection = "";
+        let roundResult = "";
+
+    // SELECTORS
+        const choices = ["rock", "paper", "scissors"];
+        const gameArea = document.querySelector(".game-area");
+        const playerBtn = document.querySelectorAll(".player-button");
+        const computerRock = document.querySelector("#rock");
+        const computerPaper = document.querySelector("#paper");
+        const computerScissors = document.querySelector("#scissors");
+        const computerScore = document.querySelector(".computer-score");
+        const playerScore = document.querySelector(".player-score");
+        const resultDiv = document.querySelector("#results");
+
+    // ADD GLOW EFFECT TO BUTTON CLICKED BY PLAYER
+        playerBtn.forEach(button => {
+            button.addEventListener('click', () => {
+                removeUserEffects();
+                button.classList.add("glow");
+                playerSelection = button.getAttribute('value');
+                playRound(playerSelection,computerSelection);
+                button.removeEventListener('click',endGame);
+            });
+        });
+    
+    // COMPUTER RANDOM SELECTOR
+        function computerBtn(){
+        return choices[Math.round(Math.random()*2)];
+        };
+
+    // ADD GLOW EFFECT TO RANDOM COMPUTER SELECTION
+        function computerEffect(computerSelection){
+            if (computerSelection == "rock") {
+                removeComputerEffects();
+                computerRock.classList.add("red-glow");
+            };
+            if (computerSelection == "paper") {
+                removeComputerEffects();
+                computerPaper.classList.add("red-glow");
+            };
+            if (computerSelection == "scissors") {
+                removeComputerEffects();
+                computerScissors.classList.add("red-glow");
+            };
+        };
+
+    // REMOVE GLOW EFFECTS
+        function removeUserEffects (){
+            playerBtn.forEach(button => {
+                if (button.classList.contains("glow")) {
+                   button.classList.remove("glow");
+                };
+            });
+        };
+        function removeComputerEffects (){
+            computerRock.classList.remove("red-glow");
+            computerPaper.classList.remove("red-glow");
+            computerScissors.classList.remove("red-glow");
+        };
+
+    // GAME LOGIC HERE:
+        function playRound(playerSelection,computerSelection) {
+            computerSelection = computerBtn();
+            // console.log("P: " + playerSelection)
+            // console.log("C: " + computerSelection)
+            if (playerSelection === computerSelection) {
+                roundResult = "Round Tied!";
+            } else if (computerSelection === "scissors") {
+                if(playerSelection === "rock") {
+                    roundResult = "Round Won!";
+                    playerScore.textContent++;
+                } else if (playerSelection === "paper") {
+                    roundResult = "Round Lost!";
+                    computerScore.textContent++;                  
+                };
+            } else if (computerSelection ==="rock") {
+                if(playerSelection === "paper") {
+                    roundResult = "Round Won!";
+                    playerScore.textContent++;
+                } else if (playerSelection === "scissors") {
+                    roundResult = "Round Lost!";
+                    computerScore.textContent++;
+                };
+            } else if (computerSelection ==="paper") {
+                if(playerSelection === "scissors") {
+                    roundResult = "Round Won!";
+                    playerScore.textContent++;
+                } else if (playerSelection === "rock") {
+                    roundResult = "Round Lost!";
+                    computerScore.textContent++;
+                };
+            };
+            announceRound();
+            computerEffect(computerSelection);
+        };
+
+    // CREATE NEW LIST ITEM EVERY TIME A BUTTON IS CLICKED TO ANNOUNCE ROUND RESULTS
+        function announceRound() {
+            const announcement = document.createElement("li");
+            announcement.id = "list"; //FOR STYLING
+            resultDiv.appendChild(announcement);
+            resultDiv.insertBefore(announcement,resultDiv.childNodes[0]);
+            if (playerScore.textContent <= 4 && computerScore.textContent <= 4){
+                announcement.textContent = roundResult + " You " +playerScore.textContent + " - " + "Computer "+computerScore.textContent;
+            };
+            if (playerScore.textContent == 5){
+                announcement.textContent = "YOU WON!!"+ " You " +playerScore.textContent + " - " + "Computer "+computerScore.textContent;
+                endGame();
+            };
+            if (computerScore.textContent == 5){
+                announcement.textContent = "COMPUTER WON!!"+ " You " +playerScore.textContent + " - " + "Computer "+computerScore.textContent;
+                endGame();
+            };
+            shortenList();
+        };
+
+    // ADDED THIS TO SHORTEN THE LENGTH OF THE LIST FOR BETTER VISIBILITY
+        function shortenList(){   
+            const listArray = Array.from(resultDiv.childNodes);
+            //console.log(listArray);     
+            if(listArray.length > 5) {
+                listArray[5].classList.add("collapse");
+                document.addEventListener('transitionend', () => {
+                    listArray[5].remove();
+                });
+            };
+    //ADDED GLOW EFFECT OF FIRST ARRAY W.R.T THE OUTCOME OF THAT ROUND & REMOVE IT WHEN NEXT ROUND OCCURS
+            if(listArray[0].textContent.includes("Won") == true || listArray[0].textContent.includes("Tied") == true) {
+                listArray[0].classList.add("glow");
+            } else if(listArray[0].textContent.includes("Lost") == true) {
+                listArray[0].classList.add("red-glow");
+            };
+            if (listArray.length > 1) {
+                listArray[1].classList.remove("glow");
+                listArray[1].classList.remove("red-glow");
+                };
+            };
+
+    // CREATE BUTTON TO FREEZE GAME AREA TO PREVENT FURTHER PLAYING, AND REFRESH GAME
+        function endGame(){
+            const endBtn = document.createElement("button");
+            endBtn.id = "button";
+            if(playerScore.textContent == "5") {
+                endBtn.textContent = "YOU WON! AGAIN?";
+                endBtn.classList.add("glow");
+                endBtn.classList.add("btn-glow");
+            } else {
+                endBtn.textContent = "YOU LOST! TRY AGAIN?";
+                endBtn.classList.add("red-glow");
+                endBtn.classList.add("btn-glow-red");
+            };
+            gameArea.classList.add("freeze");
+            document.body.appendChild(endBtn);
+            endBtn.addEventListener("click", () => {
+                gameArea.classList.remove("freeze");
+                playerScore.textContent = "0";
+                computerScore.textContent = "0";
+                resultDiv.textContent = "";
+                endBtn.remove();
+                removeComputerEffects();
+                removeUserEffects();
+            });
+        };
+    </script>
+</body>
+</html>
